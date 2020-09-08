@@ -1,0 +1,2395 @@
+{
+  "info": {
+    "_postman_id": "173ef936-fc8e-4636-91c7-04926cba0ba5",
+    "name": "dTool API",
+    "description": "Documentação da API do projeto [dTool](http://tools.ages.pucrs.br/dtool/wiki/wikis/home).\n\n#### Links úteis\n\n[🔗 Página do projeto no site da AGES](http://www.ages.pucrs.br/?page_id=322)\n\n[🔗 Página da wiki do projeto](http://tools.ages.pucrs.br/dtool/wiki/wikis/home)\n\n# Autenticação\n\nTodos os endpoints (exceto o de autenticação) requerem autenticação para verificar o contexto e permissão para executar as ações necessárias. É necessário adquirir um token de acesso JWT a partir do endpoint `/auth` (_Autenticação (validar código de acesso)_), e então usar esse token no header `Authentication` em todos os requests seguintes:\n\n```\nAuthentication: Bearer access_token\n```\n\nApenas tokens gerados pelo servidor e dentro do prazo de validade são aceitos.\n\n# Endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Relatórios",
+      "item": [
+        {
+          "name": "Gerar relatório simples",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "afcd3194-26df-43b5-9afa-cf3924e0d393",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_time_tracking\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "fa3254b5-4aa9-416c-937b-d13546f59dee",
+                "exec": [
+                  "",
+                  "// ****************************************",
+                  "//                 SCHEMA",
+                  "// ****************************************",
+                  "",
+                  "const activityReport = {",
+                  "    type: \"object\",",
+                  "    properties: {",
+                  "        activity: { type: \"integer\" },",
+                  "        minimumDuration: { type: \"number\" },",
+                  "        medianDuration: { type: \"number\" },",
+                  "        maximumDuration: { type: \"number\" }",
+                  "    },",
+                  "    additionalProperties: false,",
+                  "    required: [\"activity\", \"minimumDuration\", \"medianDuration\", \"maximumDuration\"]",
+                  "}",
+                  "",
+                  "const reportsSchema = {",
+                  "    type: \"array\",",
+                  "    items: activityReport",
+                  "}",
+                  "",
+                  "const errorSchema = {",
+                  "    type: \"object\",",
+                  "    properties: {",
+                  "        code: { type: \"string\" },",
+                  "        message: { type: \"string\" }",
+                  "    },",
+                  "    additionalProperties: false,",
+                  "    required: [\"code\", \"message\"]",
+                  "}",
+                  "",
+                  "const schema = {",
+                  "    \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+                  "    oneOf: [",
+                  "        reportsSchema,",
+                  "        errorSchema",
+                  "    ]",
+                  "}",
+                  "",
+                  "// ****************************************",
+                  "//                 TESTS",
+                  "// ****************************************",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"schema is valid\", () => {",
+                  "    pm.expect(tv4.validate(response, schema)).to.be.true;",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "dee688a5-2d40-4761-bd0f-8e951a55c220",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/reports/simple?technology=1&role=4",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "reports",
+                "simple"
+              ],
+              "query": [
+                {
+                  "key": "technology",
+                  "value": "1"
+                },
+                {
+                  "key": "role",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Exporta os tempos de todas as atividades relacionadas a uma ocupação em uma tecnologia.\n\n> Requer autenticação com permissão `time-tracking` ou `administration-hospital`.\n\nDevem ser enviados dois parâmetros via query na URL: identificação da tecnologia (`technology`) e da ocupação (`role`) para os quais se quer obter um relatório dos tempos mínimo, mediana e máximo por atividade.\n\nO retorno é uma lista com objetos descrevendo os tempos de cada atividade:\n- `activity`: id da atividade;\n- `minimumDuration`: menor tempo gasto para executar a atividade (em minutos);\n- `medianDuration`: mediana dos tempos gastos para executar a atividade (em minutos);\n- `maximumDuration`: maior tempo gasto para executar a atividade (em minutos); e\n- `lastUpdate`: timestamp da última atualização dos três campos acima."
+          },
+          "response": [
+            {
+              "id": "3708876c-61d9-4c26-964e-b53ecbf8bad2",
+              "name": "Várias atividades",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/reports/simple?technology=1&role=1",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "reports",
+                    "simple"
+                  ],
+                  "query": [
+                    {
+                      "key": "technology",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role",
+                      "value": "1",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"activity\": 2,\n\t\t\"minimumDuration\": 37,\n\t\t\"medianDuration\": 72,\n\t\t\"maximumDuration\": 129,\n\t\t\"lastUpdate\": \"2020-06-03T11:29:43-0300\"\n\t},\n\t{\n        \"activity\": 3,\n        \"minimumDuration\": 67,\n        \"medianDuration\": 350,\n        \"maximumDuration\": 496,\n        \"lastUpdate\": \"2020-06-03T11:29:43-0300\"\n    }\n]"
+            },
+            {
+              "id": "8ebb2a4e-8f08-4dfa-9bd2-c52f89f6bd29",
+              "name": "Uma atividade",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/reports/simple?technology=2&role=3",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "reports",
+                    "simple"
+                  ],
+                  "query": [
+                    {
+                      "key": "technology",
+                      "value": "2",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role",
+                      "value": "3",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"activity\": 2,\n\t\t\"minimumDuration\": 37,\n\t\t\"medianDuration\": 72,\n\t\t\"maximumDuration\": 129,\n\t\t\"lastUpdate\": \"2020-06-03T11:29:43-0300\"\n\t}\n]"
+            },
+            {
+              "id": "d6652d44-c89d-49c5-a7d1-21920e59bac9",
+              "name": "Erro - Dados insuficientes",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/reports/simple?role=2",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "reports",
+                    "simple"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "2",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"Either 'technology' and 'role' values are required.\"\n}"
+            },
+            {
+              "id": "c28fd820-c345-4a7b-83b4-26eff05a0976",
+              "name": "Erro - Sem dados para relatório",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/reports/simple?technology=3&role=2",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "reports",
+                    "simple"
+                  ],
+                  "query": [
+                    {
+                      "key": "technology",
+                      "value": "3",
+                      "type": "text"
+                    },
+                    {
+                      "key": "role",
+                      "value": "2",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "102"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"66-wlH0NDqvwRysMwtv3s0WRT+41GM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 14 Jun 2020 17:39:31 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                }
+              ],
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"not_found/no_data_found\",\n    \"message\": \"There is no metrics related to this technology and role\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Gerar relatório completo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "79192ea7-e0cd-4902-ae18-efb3497d2bd3",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_administration_hospital\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "ef63b3c9-664e-4ebb-b106-3bc1391b6a48",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "9e1b34ad-6004-45b8-9274-b21b37ad6384",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/reports/complete",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "reports",
+                "complete"
+              ]
+            },
+            "description": "Exporta todas as informações de um hospital sobre suas tecnologias e execuções.\n\n> **Autenticação:** `administration-hospital`.\n\nA rota obtém informações do hospital do qual construir o relatório a partir dos dados de autenticação, e retorna um arquivo Excel com três planilhas (abas) para cada tecnologia do hospital:\n- _<nome da tecnologia> - Definição_: contém a matriz de definição da tecnologia, que relaciona atividades e ocupações;\n- _<nome da tecnologia> - Execuções_: lista todas as execuções de atividades por ocupações de uma tecnologia, com a data/hora de início da execução, duração e token único do dispositivo que originou a execução; e\n- _<nome da tecnologia> - Consolidado_: lista todos os pares (atividade, ocupação), junto das durações mínima, mediana e máxima das execuções registradas para o par (atividade, ocupação) em questão."
+          },
+          "response": []
+        }
+      ],
+      "_postman_id": "3c9ac10d-dbba-4cbf-98f9-69fb55a4eeae",
+      "description": "Requests para geração de relatórios.\n\nDois tipos de relatórios são suportados:\n- simples: contém apenas os tempos mínimo, mediano e máximo das atividades de um profissional em uma tecnologia; requer a identificação da tecnologia e profissional;\n- completo: contém todos os registros de tempo já realizados; usado por gestores de instituição e administradores do sistema.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "15fdee55-9d84-4a30-8d15-16727d4ff162",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "515c7798-6336-4cf3-9b29-501651a0e394",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tecnologias",
+      "item": [
+        {
+          "name": "Cadastrar/importar tecnologia",
+          "_postman_id": "5745c7f8-ab6d-4aa0-8b60-c4bcbaf4c650",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {
+              "content-type": true
+            }
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/csv",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "AVC 2;Anestesista;Enfermeiro;Médico Residente [Residente]\nConsulta;x;;x\nMedir pressão [Pressão];;x;x\nPrescrição;(se preciso);;x",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/technologies",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies"
+              ]
+            },
+            "description": "> **Autenticação:** apenas gestores (`administration-hospital`).\n\nPermite importar uma tecnologia, associando-a à instituição de saúde relacionada ao token de acesso usado no request. O corpo do request contém o conteúdo do arquivo com a definição da tecnologia em formato texto (CSV). A resposta contém a lista atualizada das tecnologias cadastradas na instituição de saúde do token usado no request.\n\n**Casos de erro:**\n- formato inválido: `400 Bad Request` e corpo da resposta com objeto de erro com código `bad_request/invalid_format`;\n- tecnologia repetida: `409 Conflict` e corpo da resposta com objeto de erro com código `conflic/technology_already_exists`."
+          },
+          "response": [
+            {
+              "id": "14fa25fc-f739-4bbd-b13b-186e72e74348",
+              "name": "Tecnologia cadastrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"Infarto\",\n\t\"contents\": \";Anestesista;Enfermeiro;Médico Residente [Residente]\\nConsulta;x;;x\\nMedir pressão [Pressão];;x;x\\nPrescrição;(se preciso);;x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Cirurgia\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"name\": \"Infarto\"\n\t}\n]"
+            },
+            {
+              "id": "36105851-a637-4962-94f4-5b9291d677dd",
+              "name": "Erro - Formato inválido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"Infarto\",\n\t\"contents\": \"Anestesista\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n\t\"code\": \"bad_request/invalid_format\",\n\t\"message\": \"the request body is not in a valid format for creating a technology\"\n}"
+            },
+            {
+              "id": "668ea25f-b3f1-4214-b6c5-80150314f436",
+              "name": "Erro - Tecnologia já criada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "name": "Content-Type",
+                    "value": "text/plain",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "AVC;Médico Residente\nConsulta;x",
+                  "options": {
+                    "raw": {
+                      "language": "text"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"conflic/technology_already_exists\",\n    \"message\": \"another technology with the same name already exists; try again with a different name\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar tecnologias",
+          "_postman_id": "9ca7fa71-4acc-4d0c-ac76-4a918bfb5129",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/technologies",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies"
+              ]
+            },
+            "description": "> **Autenticação:** apenas gestores (`administration-hospital`).\n\nObtém a lista de tecnologias da instituição de saúde de acordo com o token usado no request. Apenas as tecnologias não deletadas são retornadas.\n\n**Casos de erro:** essa rota não retorna erros `4xx`."
+          },
+          "response": [
+            {
+              "id": "163521f6-963c-4799-8edb-0a069a0a9b85",
+              "name": "Lista de tecnologias",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Cirurgia\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"name\": \"Prótese\"\n\t}\n]"
+            }
+          ]
+        },
+        {
+          "name": "ND - Excluir tecnologia",
+          "_postman_id": "8b068040-d8cb-492d-a6e2-41dac4674bfd",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/technologies/3",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies",
+                "3"
+              ]
+            },
+            "description": "> **Autenticação:** apenas gestores (`administration-hospital`).\n\nExclui uma tecnologia de uma instituição de saúde. A tecnologia não estará mais disponível para seleção durante a contagem de tempos, nem para exportação de dados por gestores, mas ainda estará disponível aos administradores do sistema (continuará a aparecer na exportação de todos os dados da instituição e em relatórios).\n\nRetorna a lista das tecnologias remanescentes, que ainda estão cadastradas para a instituição de saúde relacionada.\n\n**Casos de erro:**\n- tecnologia não encontrada: status `404 Not Found` e lista de tecnologia cadastradas no corpo da resposta."
+          },
+          "response": [
+            {
+              "id": "b168218b-6079-4d0e-a63a-84d4083c8be6",
+              "name": "Tecnologia excluída",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/3",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "3"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Cirurgia\"\n\t}\n]"
+            },
+            {
+              "id": "2cfd0ab1-6eb6-41c6-9ba0-eadd86cd017c",
+              "name": "Erro - Tecnologia não encontrada",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/4",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "4"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Cirurgia\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"name\": \"Infarto\"\n\t}\n]"
+            }
+          ]
+        }
+      ],
+      "_postman_id": "02315f80-4dbf-4211-87c5-617f74866335",
+      "description": "Requests para gerenciamento de tecnologias: criação, listagem, exclusão e download dos dados completos de tecnologias.\n\nAlgumas dessas rotas rotas são de uso exclusivo por gestores e administradores:\n- apenas gestores podem cadastrar, listar e excluir tecnologias – `/technologies` (administradores têm acesso às tecnologias de uma instituição baixando todos os dados de uma instituição específica);\n- apenas administradores podem cadastrar e excluir tecnologias de exemplo – `/technologies/samples`.\n\nAs rotas de listagem de tecnologias de exemplo e download de uma tecnologia-exemplo específica (`GET /technologies/samples` e `GET /technologies/samples/{{id}}`) não requerem autenticação.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "d960127f-0edd-49d7-ace1-a95776e1fdc3",
+            "type": "text/javascript",
+            "exec": [
+              "/**",
+              " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+              " * @param accessCode Código de acesso usado para autenticação.",
+              " */",
+              "const authenticate = (accessCode) => {",
+              "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+              "",
+              "  const options = {",
+              "    url: path,",
+              "    method: \"POST\",",
+              "    header: { \"Content-Type\": \"application/json\" },",
+              "    body: {",
+              "      mode: \"raw\",",
+              "      raw: JSON.stringify({ code: accessCode }),",
+              "    },",
+              "  };",
+              "",
+              "  pm.sendRequest(options, (err, response) => {",
+              "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+              "  });",
+              "};",
+              "",
+              "authenticate(pm.environment.get(\"access_code_administration_hospital\"));",
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "303217e3-9a10-4998-8687-dd3aed9d7d4d",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tecnologias-exemplo",
+      "item": [
+        {
+          "name": "ND - Cadastrar tecnologia-exemplo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "46bb4363-60a4-430a-aaa8-a485efcc6aaa",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_administration_app\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "7280f339-ba62-484e-85c7-85fbd61b4d2f",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"name\": \"Infarto\",\n\t\"contents\": \";Anestesista;Enfermeiro;Médico Residente [Residente]\\nConsulta;x;;x\\nMedir pressão [Pressão];;x;x\\nPrescrição;(se preciso);;x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/technologies/samples",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies",
+                "samples"
+              ]
+            },
+            "description": "> **Autenticação:** administração do sistema (`administration-app`).\n\nPermite cadastrar uma tecnologia-exemplo para o sistema, para que a mesma fique disponível para uso pelos gestores das instituições do sistema. O corpo do request contém o conteúdo do arquivo com a definição da tecnologia-exemplo em formato texto (CSV).\n\nA resposta contém a lista atualizada de tecnologias-exemplo cadastradas no sistema.\n\n**Casos de erro:**\n- formato inválido: `400 Bad Request` e código `bad_request/invalid_format`;\n- dados insuficientes: `400 Bad Request` e código `bad_request/missing_fields`."
+          },
+          "response": [
+            {
+              "id": "59b0bbab-d43f-49dd-bf12-6958aea962eb",
+              "name": "Tecnologia-exemplo cadastrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"Infarto\",\n\t\"contents\": \";Anestesista;Enfermeiro;Médico Residente [Residente]\\nConsulta;x;;x\\nMedir pressão [Pressão];;x;x\\nPrescrição;(se preciso);;x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Cirurgia\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"name\": \"Infarto\",\n\t\t\"type\": \"CSV\"\n\t}\n]"
+            },
+            {
+              "id": "b47a748c-789e-4afc-bd4a-466c8382ec7b",
+              "name": "Erro - Formato inválido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "name": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"Infarto\",\n\t\"contents\": \"Anestesista\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n\t\"code\": \"bad_request/invalid_format\",\n\t\"message\": \"the request body is not in a valid format for creating a technology sample\"\n}"
+            },
+            {
+              "id": "c07d59ba-162e-46be-b796-c179f551e116",
+              "name": "Erro - Dados insuficientes",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"name\": \"\",\n\t\"contents\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"fields 'name' and 'contents' are required and shouldn't be empty\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "ND - Listar tecnologias-exemplo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "aee52ffe-44dc-4ff9-9fc6-ec7b2d8215e0",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_administration_hospital\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "c3883258-3101-4aa5-a013-16c07ce53219",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/technologies/samples",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies",
+                "samples"
+              ]
+            },
+            "description": "Obtém a lista de tecnologias-exemplo cadastradas pelos administradores do sistema. A lista retornada contém um objeto relativo à documentação sobre a importação de tecnologias.\n\nPara obter o conteúdo de uma tecnologia-exemplo, verifique a documentação da rota _Listar tecnologias-exemplo_ (`GET /technologies/samples/:id`), usando o ID do exemplo desejado.\n\n> **Observação:** é garantido que pelo menos um elemento será retornado, relativo à documentação do processo de importação de tecnologias.\n\n**Casos de erro:** essa rota não retorna erros `4xx`."
+          },
+          "response": [
+            {
+              "id": "275013d7-9222-4b6e-abd9-c873d96a5468",
+              "name": "Lista de tecnologias-exemplo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": -1,\n\t\t\"name\": \"Documentação\",\n\t\t\"type\": \"PDF\"\n\t},\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Infarto\",\n\t\t\"type\": \"CSV\"\n\t}\n]"
+            }
+          ]
+        },
+        {
+          "name": "ND - Baixar tecnologia-exemplo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "78557dec-e010-4d45-a5c1-32d704846ecb",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_administration_hospital\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "3e55ff37-64ec-4d64-9b49-c294778d852c",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/technologies/samples/3",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies",
+                "samples",
+                "3"
+              ]
+            },
+            "description": "Fazer o download de uma tecnologia-exemplo a partir do seu ID (obtido usando o request _Listar tecnologias-exemplo_, `GET /technologies/samples`). Use essa rota também para realizar o download da documentação sobre o cadastro/importação de tecnologias.\n\nO header `Content-Type` da resposta varia de acordo com o formato do exemplo.\n\n**Casos de erro:**\n- exemplo não encontrado: `404 Not Found` e código `not_found`."
+          },
+          "response": [
+            {
+              "id": "73b9c61d-29df-4e0e-9890-9fc409da45a8",
+              "name": "Conteúdo de tecnologia-exemplo",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples/3",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples",
+                    "3"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/csv",
+                  "description": "",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Disposition",
+                  "value": "attachment;filename=AVC.csv",
+                  "description": "",
+                  "type": "text"
+                }
+              ],
+              "cookie": [],
+              "responseTime": null,
+              "body": ";Anestesista;Enfermeiro;Médico Residente [Residente]\nConsulta;x;;x\nMedir pressão [Pressão];;x;x\nPrescrição;(se preciso);;x\n"
+            },
+            {
+              "id": "d323f0b5-3208-4b4c-9bb0-d20c161d0663",
+              "name": "Erro - Tecnologia-exemplo não encontrada",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples/9",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples",
+                    "9"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n\t\"code\": \"not_found\",\n\t\"message\": \"the provided id doesn't represent a technology sample\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "ND - Excluir tecnologia-exemplo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "9e5253d2-f53b-45a3-b7df-c6a6eeb1e1be",
+                "exec": [
+                  "/**",
+                  " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+                  " * @param accessCode Código de acesso usado para autenticação.",
+                  " */",
+                  "const authenticate = (accessCode) => {",
+                  "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+                  "",
+                  "  const options = {",
+                  "    url: path,",
+                  "    method: \"POST\",",
+                  "    header: { \"Content-Type\": \"application/json\" },",
+                  "    body: {",
+                  "      mode: \"raw\",",
+                  "      raw: JSON.stringify({ code: accessCode }),",
+                  "    },",
+                  "  };",
+                  "",
+                  "  pm.sendRequest(options, (err, response) => {",
+                  "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+                  "  });",
+                  "};",
+                  "",
+                  "authenticate(pm.environment.get(\"access_code_administration_app\"));",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "_postman_id": "8dd69be5-f7fc-49ad-b2b2-07ea15724a9a",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/technologies/samples/3",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "technologies",
+                "samples",
+                "3"
+              ]
+            },
+            "description": "> **Autenticação:** administração do sistema (`administration-app`).\n\nExclui uma tecnologia-exemplo do sistema, impedindo o seu uso por gestores para a criação de novas tecnologias. O exemplo não estará mais disponível para download por gestores. **O exemplo é deletado do banco de dados.**\n\n**Observação:** não é possível excluir a documentação sobre importação de tecnologias. Para atualizá-la, é preciso modificar o arquivo PDF referenciado pelo código do servidor (mais detalhes na [documentação do backend](http://tools.ages.pucrs.br/dtool/backend) ou [do sistema](http://tools.ages.pucrs.br/dtool/wiki/wikis/home)).\n\nRetorna a lista das tecnologias-exemplo remanescentes, que ainda estão cadastradas no sistema.\n\n**Casos de erro:**\n- tecnologia-exemplo não encontrada: status `404 Not Found` e lista de tecnologias-exemplo cadastradas no corpo da resposta;\n- exclusão não permitida (ocorre ao tentar deletar a documentação): status `405 Method Not Allowed` e código `not_allowed/documentation`."
+          },
+          "response": [
+            {
+              "id": "7d36f372-10bc-4da2-97c3-bf2635d0bf5c",
+              "name": "Tecnologia-exemplo excluída",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples/3",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples",
+                    "3"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Infarto\",\n\t\t\"type\": \"CSV\"\n\t}\n]"
+            },
+            {
+              "id": "ff4c318a-f625-46e2-94bd-25c6765f2f31",
+              "name": "Erro - Exemplo não encontrado",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples/4",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples",
+                    "4"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"name\": \"AVC\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"name\": \"Infarto\",\n\t\t\"type\": \"CSV\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"name\": \"Prótese\",\n\t\t\"type\": \"CSV\"\n\t}\n]"
+            },
+            {
+              "id": "0e499dc2-de8b-4dc4-9bc3-319a2131b704",
+              "name": "Erro - Exclusão não permitida (documentação)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/technologies/samples/-1",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "technologies",
+                    "samples",
+                    "-1"
+                  ]
+                }
+              },
+              "status": "Method Not Allowed",
+              "code": 405,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n\t\"code\": \"not_allowed/documentation\",\n\t\"message\": \"the documentation cannot be deleted; check the docs on how to update it\"\n}"
+            }
+          ]
+        }
+      ],
+      "_postman_id": "6c0ffc0f-6696-45d3-a1a8-1dbc7e8aa423",
+      "description": "Tecnologias-exemplo são templates de arquivos de definição de tecnologia que podem ser usados por gestores para entender o formato do arquivo com a definição de uma tecnologia, suas atividades e ocupações, de forma a facilitar o uso do sistema.\n\nApenas os administradores do sistema podem cadastrar e excluir tecnologias-exemplo, e qualquer usuário pode acessar as tecnologias-exemplo cadastradas (leia-se requests `GET` não precisam ser autenticados).",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "51c3271f-2fec-4206-97b6-9eeb9033f9a1",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "b55bc4fb-e7b6-46f1-a5fe-f097ce553442",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Instituições de saúde",
+      "item": [
+        {
+          "name": "Cadastrar instituição de saúde",
+          "_postman_id": "ebb55ad5-3f16-4057-b7f9-4b2c2cda8dfa",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"institutionName\": \"Hospital São Lucas\",\n\t\"administrationEmail\": \"hsl@pucrs.br\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/health_institutions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "health_institutions"
+              ]
+            },
+            "description": "> **Autenticação:** administração do sistema (`administration-app`).\n\nPermite cadastrar uma instituição de saúde no sistema, criado códigos de contagem de tempo e gestão e enviando-os para o e-mail da gestão da instituição. A resposta contém os códigos de acesso ao app (`timeTrackingCode` e `administrationCode`).\n\nSe não for possível enviar o e-mail com os códigos de acesso, a resposta terá status `201 Created` e um objeto de erro com código `internal/email-not-sent` (ver exemplo _Falha ao enviar e-mail com códigos_).\n\n**Casos de erro:**\n- e-mail inválido: `400 Bad Request` e código `bad_request/invalid_format`;\n- dados insuficientes: `400 Bad Request` e código `bad_request/missing_fields`."
+          },
+          "response": [
+            {
+              "id": "a4443f09-2624-48b8-b635-eab59eb6bd1f",
+              "name": "Instituição cadastrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"institutionName\": \"Hospital São Lucas\",\n\t\"administrationEmail\": \"hsl@pucrs.br\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/health_institutions",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"timeTrackingCode\": \"0WFE\",\n    \"administrationCode\": \"9WHS\"\n}"
+            },
+            {
+              "id": "d553ac69-0f61-4711-ab8a-e9a389496745",
+              "name": "Erro - Dados insuficientes",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"institutionName\": \"\",\n\t\"administrationEmail\": \"hsl@pucrs.br\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/health_institutions",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"fields 'institutionName' and 'administrationEmail' are required and shouldn't be empty\"\n}"
+            },
+            {
+              "id": "2fcec233-a0ae-4a7d-81b1-6cd214484e71",
+              "name": "Erro - E-mail inválido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"institutionName\": \"Hospital São Lucas\",\n\t\"administrationEmail\": \"hsl@pucrs.b\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/health_institutions",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"code\": \"bad_request/invalid_format\",\n    \"message\": \"field 'administrationEmail' is not valid\"\n}"
+            },
+            {
+              "id": "bbee837e-157d-42aa-b787-b190da77881d",
+              "name": "Falha ao enviar e-mail com códigos",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n\t\"institutionName\": \"Hospital São Lucas\",\n\t\"administrationEmail\": \"hsl@pucrs.br\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{api_url}}/health_institutions",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "{\n    \"timeTrackingCode\": \"0WFE\",\n    \"administrationCode\": \"9WHS\",\n    \"error\": {\n    \t\"code\": \"internal/email-not-sent\",\n    \t\"message\": \"failed to send e-mail with access codes\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar instituições de saúde",
+          "_postman_id": "a74b4c49-88c2-46d6-a5b4-1b64a991657a",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/health_institutions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "health_institutions"
+              ]
+            },
+            "description": "> **Autenticação:** administração do sistema (`administration-app`).\n\nObtém a lista de instituições de saúde cadastradas no sistema, com seu nome e códigos de acesso.\n\nInstituições deletadas não são retornadas.\n\n**Casos de erro:** essa rota não retorna erros `4xx`."
+          },
+          "response": [
+            {
+              "id": "4b98b212-f03c-4db7-8575-a937962100cb",
+              "name": "Lista de instituições",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/health_institutions",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"institutionName\": \"Hospital São Lucas\",\n\t\t\"timeTrackingCode\": \"HSLC\",\n\t\t\"administrationCode\": \"HSLG\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"institutionName\": \"Hospital Moinhos de Vento\",\n\t\t\"timeTrackingCode\": \"HMVC\",\n\t\t\"administrationCode\": \"HMVG\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"institutionName\": \"Hospital Divina Providência\",\n\t\t\"timeTrackingCode\": \"HDPC\",\n\t\t\"administrationCode\": \"HDPG\"\n\t}\n]"
+            }
+          ]
+        },
+        {
+          "name": "ND - Excluir instituição de saúde",
+          "_postman_id": "5a2f7026-7ac6-43ad-ae16-f65c8351a29e",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/health_institutions/3",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "health_institutions",
+                "3"
+              ]
+            },
+            "description": "> **Autenticação:** administração do sistema (`administration-app`).\n\nExclui uma instituição de saúde **permanentemente**. A instituição não estará mais disponível contagem de tempos, operações de gestão (CRUD de tecnologias), ou exportação de relatórios de qualquer natureza. **Todas as tecnologias, atividades, ocupações e execuções são deletadas do banco de dados.**\n\nRetorna a lista das instituições remanescentes, que ainda estão cadastradas no sistema.\n\n**Casos de erro:**\n- instituição não encontrada: status `404 Not Found` e lista de instituições cadastradas no corpo da resposta."
+          },
+          "response": [
+            {
+              "id": "3a83b0d9-f58b-4110-bd90-cd6c43907f17",
+              "name": "Instituição excluída",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/health_institutions/3",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions",
+                    "3"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"institutionName\": \"Hospital São Lucas\",\n\t\t\"timeTrackingCode\": \"HSLC\",\n\t\t\"administrationCode\": \"HSLG\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"institutionName\": \"Hospital Moinhos de Vento\",\n\t\t\"timeTrackingCode\": \"HMVC\",\n\t\t\"administrationCode\": \"HMVG\"\n\t}\n]"
+            },
+            {
+              "id": "3dac3096-9609-4438-b2fb-7aa1c463ab54",
+              "name": "Erro - Instituição não encontrada",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/health_institutions/4",
+                  "host": [
+                    "{{api_url}}"
+                  ],
+                  "path": [
+                    "health_institutions",
+                    "4"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": null,
+              "cookie": [],
+              "responseTime": null,
+              "body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"institutionName\": \"Hospital São Lucas\",\n\t\t\"timeTrackingCode\": \"HSLC\",\n\t\t\"administrationCode\": \"HSLG\"\n\t},\n\t{\n\t\t\"id\": 2,\n\t\t\"institutionName\": \"Hospital Moinhos de Vento\",\n\t\t\"timeTrackingCode\": \"HMVC\",\n\t\t\"administrationCode\": \"HMVG\"\n\t},\n\t{\n\t\t\"id\": 3,\n\t\t\"institutionName\": \"Hospital Divina Providência\",\n\t\t\"timeTrackingCode\": \"HDPC\",\n\t\t\"administrationCode\": \"HDPG\"\n\t}\n]"
+            }
+          ]
+        }
+      ],
+      "_postman_id": "bbd45fc0-971e-4584-b4b9-cacb31af5109",
+      "description": "Requests para gerenciamento de instituições de saúde: criação, listagem, exclusão e download dos dados completos (tecnologias e execuções).\n\nTodas as rotas são de uso exclusivo por administradores do sistema, com o uso de um token com permissão `administration-app`.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "0bfbc7cc-b8d1-462f-a644-6e9d5991f729",
+            "type": "text/javascript",
+            "exec": [
+              "/**",
+              " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+              " * @param accessCode Código de acesso usado para autenticação.",
+              " */",
+              "const authenticate = (accessCode) => {",
+              "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+              "",
+              "  const options = {",
+              "    url: path,",
+              "    method: \"POST\",",
+              "    header: { \"Content-Type\": \"application/json\" },",
+              "    body: {",
+              "      mode: \"raw\",",
+              "      raw: JSON.stringify({ code: accessCode }),",
+              "    },",
+              "  };",
+              "",
+              "  pm.sendRequest(options, (err, response) => {",
+              "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+              "  });",
+              "};",
+              "",
+              "authenticate(pm.environment.get(\"access_code_administration_app\"));",
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "a4fe2d7c-097f-40e4-a79e-6d62461584d7",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticação (validar código de acesso)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "eaf3a350-2775-4c7c-8c61-2dff01a2da1c",
+            "exec": [
+              "",
+              "// ****************************************",
+              "//                 SCHEMA",
+              "// ****************************************",
+              "",
+              "const activity = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        id: { type: \"integer\" },",
+              "        name: { type: \"string\" },",
+              "        roles: {",
+              "            type: \"array\",",
+              "            items: { type: \"integer\" }",
+              "        }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"id\", \"name\", \"roles\"]",
+              "}",
+              "",
+              "const technology = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        id: { type: \"integer\" },",
+              "        name: { type: \"string\" },",
+              "        activities: {",
+              "            type: \"array\",",
+              "            items: activity",
+              "        }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"id\", \"name\"],",
+              "}",
+              "",
+              "const institution = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        id: { type: \"integer\" },",
+              "        name: { type: \"string\" }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"name\"]",
+              "}",
+              "",
+              "const role = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        id: { type: \"integer\" },",
+              "        name: { type: \"string\" }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"id\", \"name\"]",
+              "}",
+              "",
+              "const timeTrackingManagementSchema = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        permission: { enum: [\"time-tracking\", \"administration-hospital\"] },",
+              "        accessToken: { type: \"string\" },",
+              "        institution: institution,",
+              "        roles: { type: \"array\", items: role },",
+              "        technologies: { type: \"array\", items: technology }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"permission\", \"accessToken\", \"institution\", \"technologies\"]",
+              "}",
+              "",
+              "const adminSchema = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        permission: { enum: [\"administration-app\"] },",
+              "        accessToken: { type: \"string\" },",
+              "        institutions: { type: \"array\", items: institution }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"permission\", \"accessToken\", \"institutions\"]",
+              "}",
+              "",
+              "const errorSchema = {",
+              "    type: \"object\",",
+              "    properties: {",
+              "        code: { type: \"string\" },",
+              "        message: { type: \"string\" }",
+              "    },",
+              "    additionalProperties: false,",
+              "    required: [\"code\", \"message\"]",
+              "}",
+              "",
+              "const schema = {",
+              "    \"$schema\": \"http://json-schema.org/draft-07/schema#\",",
+              "    oneOf: [",
+              "        timeTrackingManagementSchema,",
+              "        adminSchema,",
+              "        errorSchema",
+              "    ]",
+              "}",
+              "",
+              "// ****************************************",
+              "//                 TESTS",
+              "// ****************************************",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test(\"schema is valid\", () => {",
+              "    pm.expect(tv4.validate(response, schema)).to.be.true;",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "af9e34ce-86b0-41f2-936c-471021972048",
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "_postman_id": "29d67318-66c5-440e-9b2e-3a4d8a02f623",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"code\": \"{{access_code_time_tracking}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/auth",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "auth"
+          ]
+        },
+        "description": "Valida um código de acesso ao aplicativo, indicando o tipo de código:\n- administração do app;\n- administração de um hospital;\n- contagem de tempo de um hospital.\n\nO retorno contém:\n- o nível de permissão do código (`permission`): `time-tracking`, `administration-hospital` ou `administration-app`;\n- um token JWT a ser usado em todos os outros requests para a API (como autenticação _Bearer_): `accessToken`;\n- informações da instituição: ocupações, tecnologias e atividades (se for um código relacionado a uma instituição);\n- informações das instituições cadastradas (se for um código de administração).\n\nCasos de erro:\n- sem código: `400 Bad Request` e corpo da resposta com objeto de erro com código `bad_request/missing_fields`;\n- código não encontrado: `404 Not Found` e corpo da resposta com objeto de erro com código `not_found`."
+      },
+      "response": [
+        {
+          "id": "0741163f-cb43-45c6-bae1-96f2b6fc8f00",
+          "name": "Erro - Sem código",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/auth",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "37"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"25-oxk1mc7c4fqUOfSE0+uV3Bz/r6E\""
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 08 Apr 2020 22:52:31 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"field 'code' is required\"\n}"
+        },
+        {
+          "id": "1fa5da24-7813-4563-a9ec-08af0b642427",
+          "name": "Contagem de tempos",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"code\": \"HSLC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/auth",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": null,
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"permission\": \"time-tracking\",\n    \"institution\": {\n        \"name\": \"Hospital São Lucas\"\n    },\n    \"roles\": [\n        {\n            \"id\": 1,\n            \"name\": \"Medico Intensivista\",\n            \"activities\": [2]\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Medico Anestesiologista\",\n            \"activities\": [1, 2]\n        },\n        {\n            \"id\": 3,\n            \"name\": \"Medico Neurocirurgião\",\n            \"activities\": [2, 3]\n        }\n    ],\n    \"technologies\": [\n    \t{\n    \t\t\"id\": 1,\n    \t\t\"name\": \"AVC\",\n    \t\t\"activities\": [\n    \t\t\t{\n    \t\t\t\t\"id\": 1,\n    \t\t\t\t\"name\": \"Medir pressão\",\n    \t\t\t\t\"roles\": [2]\n    \t\t\t},\n    \t\t\t{\n    \t\t\t\t\"id\": 2,\n    \t\t\t\t\"name\": \"Consulta\",\n    \t\t\t\t\"roles\": [1, 2, 3]\n    \t\t\t}\n    \t\t]\n    \t},\n    \t{\n    \t\t\"id\": 2,\n    \t\t\"name\": \"Cirurgia\",\n    \t\t\"activities\": [\n    \t\t\t{\n    \t\t\t\t\"id\": 3,\n    \t\t\t\t\"name\": \"Consulta\",\n    \t\t\t\t\"roles\": [3]\n    \t\t\t}\n    \t\t]\n    \t}\n    ],\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NDb2RlIjoiMTIzNCIsInBlcm1pc3Npb25zIjpbInRpbWUtdHJhY2tpbmciXSwiaWF0IjoxNTg3MDExMzgzLCJuYmYiOjE1ODcwMTEzODMsImV4cCI6MTU4NzAxNDk4MywiYXVkIjoiYnIuY29tLmR0b29sLmFwcCIsImlzcyI6ImJyLmNvbS5kdG9vbC5hcGkiLCJzdWIiOiIxMjM0In0.qrg4IKjIf8kP4ZR3cL7hZzUPRtMpznNi-6zxkUJsRco\"\n}"
+        },
+        {
+          "id": "21c085dd-49aa-462d-b529-32381e44fecc",
+          "name": "Erro - Código não encontrado",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"code\": \"AAAA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/auth",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "20"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"14-KK80Et5iWQlOUl91MVMsaJ4NvB4\""
+            },
+            {
+              "key": "Date",
+              "value": "Wed, 08 Apr 2020 22:55:01 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"code\": \"not_found\",\n    \"message\": \"the provided code doesn't represent an active health institution\"\n}"
+        },
+        {
+          "id": "2bbca0a6-2215-44f5-ad0e-fde35a3cad0d",
+          "name": "Gestão do hospital",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"code\": \"4321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/auth",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "414"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"19e-CSUKa6IxEtjmNf2TvlXliHZDY0c\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 23 Apr 2020 04:25:01 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"permission\": \"administration-hospital\",\n    \"institution\": {\n        \"name\": \"Hospital São Lucas\"\n    },\n    \"technologies\": [\n    \t{\n    \t\t\"id\": 1,\n    \t\t\"name\": \"AVC\"\n    \t},\n    \t{\n    \t\t\"id\": 2,\n    \t\t\"name\": \"Cirurgia\"\n    \t}\n    ],\n    \"samples\": [\n    \t{\n    \t\t\"id\": 1,\n    \t\t\"name\": \"Documentação\"\n    \t},\n    \t{\n    \t\t\"id\": 2,\n    \t\t\"name\": \"AVC\"\n    \t}\n    ],\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NDb2RlIjoiNDMyMSIsInBlcm1pc3Npb25zIjpbImFkbWluaXN0cmF0aW9uLWhvc3BpdGFsIl0sImlhdCI6MTU4NzYxNTk4MCwibmJmIjoxNTg3NjE1OTgwLCJleHAiOjE1ODc2MTk1ODAsImF1ZCI6ImJyLmNvbS5kdG9vbC5hcHAiLCJpc3MiOiJici5jb20uZHRvb2wuYXBpIiwic3ViIjoiNDMyMSJ9.7R3l8BzIeRys32vz5iMIx0i8P9DqrN7hFjiek7pSloA\"\n}"
+        },
+        {
+          "id": "dcaf59e0-d48b-48ec-b946-8d99d746f3d1",
+          "name": "Administração do app",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"code\": \"2L0I\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/auth",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "437"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"1b5-UiLCvYA/g4JtM3/usXk37sHsioA\""
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 23 Apr 2020 04:26:20 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"permission\": \"administration-app\",\n    \"institutions\": [\n    \t{\n    \t\t\"id\": 1,\n    \t\t\"name\": \"Hospital São Lucas\"\n    \t},\n    \t{\n    \t\t\"id\": 2,\n    \t\t\"name\": \"Hospital Moinhos de Vento\"\n    \t}\n    ],\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NDb2RlIjoiMkwwSSIsInBlcm1pc3Npb25zIjpbImFkbWluaXN0cmF0aW9uLWFwcCJdLCJpYXQiOjE1ODc2MTYwODksIm5iZiI6MTU4NzYxNjA4OSwiZXhwIjoxNTg3NjE5Njg5LCJhdWQiOiJici5jb20uZHRvb2wuYXBwIiwiaXNzIjoiYnIuY29tLmR0b29sLmFwaSIsInN1YiI6IjJMMEkifQ.joIKEolicKpi27josgK_cQXIT8reqrzBVGu1M_OnwFM\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Registrar execução de atividades",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "1830732e-eb24-4c64-a29f-71f2d0945ae0",
+            "exec": [
+              "/**",
+              " * Atualiza o token de acesso na variável de ambiente `_dtool_token`.",
+              " * @param accessCode Código de acesso usado para autenticação.",
+              " */",
+              "const authenticate = (accessCode) => {",
+              "  const path = `${pm.environment.get(\"api_url\")}/auth`;",
+              "",
+              "  const options = {",
+              "    url: path,",
+              "    method: \"POST\",",
+              "    header: { \"Content-Type\": \"application/json\" },",
+              "    body: {",
+              "      mode: \"raw\",",
+              "      raw: JSON.stringify({ code: accessCode }),",
+              "    },",
+              "  };",
+              "",
+              "  pm.sendRequest(options, (err, response) => {",
+              "    pm.environment.set(\"_dtool_token\", response.json().accessToken);",
+              "  });",
+              "};",
+              "",
+              "authenticate(pm.environment.get(\"access_code_time_tracking\"));",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "_postman_id": "3eb750dd-5c99-4501-929b-0e906b0cafd4",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\t\"deviceToken\": \"qwertyuiopasdfghjklzxcvbnm1234567890\",\n\t\"executions\": [\n\t\t{\n\t\t\t\"activityId\": 14,\n\t\t\t\"roleId\": 4,\n\t\t\t\"timestamp\": \"2020-04-04T14:20:37-0300\",\n\t\t\t\"endDate\": \"2020-04-04T18:20:37-0300\",\n\t\t\t\"duration\": 97\n\t\t},\n\t\t{\n\t\t\t\"activityId\": 3,\n\t\t\t\"roleId\": 9,\n\t\t\t\"timestamp\": \"2020-04-04T18:00:54-0300\",\n\t\t\t\"endDate\": \"2020-04-04T20:00:54-0300\",\n\t\t\t\"duration\": 326\n\t\t}\n\t]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{api_url}}/executions",
+          "host": [
+            "{{api_url}}"
+          ],
+          "path": [
+            "executions"
+          ]
+        },
+        "description": "Permite registrar a execução de múltiplas atividades em um único request.\n\n> Requer autenticação com permissão `time-tracking`.\n\nDeve ser passado um payload JSON contendo um objeto com a identificação do dispositivo que fez a leitura (`deviceToken`) e uma lista de registros de execução (`executions`), onde cada objeto deve conter as seguintes informações:\n- id da atividade executada (`activityId`);\n- id da ocupação do funcionário que executou a atividade (`roleId`);\n- timestamp da data de início da execução, no padrão [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) (`timestamp`);\n- timestamp da data final da execução, no padrão [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) (`timestamp`); e\n- duração da atividade, em segundos (`duration`)."
+      },
+      "response": [
+        {
+          "id": "1bcfa173-e4a5-4b8b-92ce-60285957f2ab",
+          "name": "Várias execuções",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"deviceToken\": \"qwertyuiopasdfghjklzxcvbnm1234567890\",\n\t\"executions\": [\n\t\t{\n\t\t\t\"activityId\": 14,\n\t\t\t\"roleId\": 4,\n\t\t\t\"timestamp\": \"2020-04-04T14:20:37-0300\",\n\t\t\t\"endDate\": \"2020-04-04T18:20:37-0300\",\n\t\t\t\"duration\": 97\n\t\t},\n\t\t{\n\t\t\t\"activityId\": 3,\n\t\t\t\"roleId\": 9,\n\t\t\t\"timestamp\": \"2020-04-04T18:00:54-0300\",\n\t\t\t\"endDate\": \"2020-04-04T20:00:54-0300\",\n\t\t\t\"duration\": 326\n\t\t}\n\t]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/executions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "executions"
+              ]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": null,
+          "header": null,
+          "cookie": [],
+          "responseTime": null,
+          "body": null
+        },
+        {
+          "id": "6263e4d5-8cb9-44a8-811a-becc082cf05a",
+          "name": "Erro - Sem deviceToken",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"executions\": [\n\t\t{\n\t\t\t\"activityId\": 14,\n\t\t\t\"roleId\": 4,\n\t\t\t\"timestamp\": \"2020-04-04T14:20:37-0300\",\n\t\t\t\"endDate\": \"2020-04-04T18:20:37-0300\",\n\t\t\t\"duration\": 97\n\t\t},\n\t\t{\n\t\t\t\"activityId\": 3,\n\t\t\t\"roleId\": 9,\n\t\t\t\"timestamp\": \"2020-04-04T18:00:54-0300\",\n\t\t\t\"endDate\": \"2020-04-04T20:00:54-0300\",\n\t\t\t\"duration\": 326\n\t\t}\n\t]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/executions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "executions"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": null,
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"fields 'deviceToken' and 'executions' are required, and there should be at least one execution\"\n}"
+        },
+        {
+          "id": "cb91ceb7-5eb5-4b0c-8d29-a1939c448f9b",
+          "name": "Erro - Nenhuma execução",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"deviceToken\": \"qwertyuiopasdfghjklzxcvbnm1234567890\",\n\t\"executions\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/executions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "executions"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "154"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 23 Apr 2020 04:45:53 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"fields 'deviceToken' and 'executions' are required, and there should be at least one execution\"\n}"
+        },
+        {
+          "id": "87ff72f3-aded-423f-a76f-710dd75097d2",
+          "name": "Erro - Dados insuficientes",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"deviceToken\": \"qwertyuiopasdfghjklzxcvbnm1234567890\",\n\t\"executions\": [\n\t\t{\n\t\t\t\"roleId\": 1,\n\t\t\t\"timestamp\": \"2020-04-04T14:20:37-0300\",\n\t\t\t\"endDate\": \"2020-04-04T18:20:37-0300\",\n\t\t\t\"duration\": 97\n\t\t},\n\t\t{\n\t\t\t\"activityId\": 1,\n\t\t\t\"roleId\": 16,\n\t\t\t\"timestamp\": \"2020-04-04T18:00:54-0300\",\n\t\t\t\"endDate\": \"2020-04-04T20:00:54-0300\",\n\t\t\t\"duration\": 326\n\t\t}\n\t]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_url}}/executions",
+              "host": [
+                "{{api_url}}"
+              ],
+              "path": [
+                "executions"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "X-Powered-By",
+              "value": "Express"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "154"
+            },
+            {
+              "key": "Date",
+              "value": "Thu, 23 Apr 2020 04:45:53 GMT"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n    \"code\": \"bad_request/missing_fields\",\n    \"message\": \"fields 'activityId', 'roleId', 'timestamp', `endDate` and 'duration' are required on all executions\"\n}"
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{_dtool_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "4bac84cb-54a9-4a69-964f-8e12727c2ef8",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "f18d8b0f-37f1-4598-889d-c6a64ece197c",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

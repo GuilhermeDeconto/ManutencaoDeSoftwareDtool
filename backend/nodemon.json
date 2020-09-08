@@ -1,0 +1,11 @@
+{
+  "exec": "npm run _dev",
+  "watch": [
+    "./src/*"
+  ],
+  "ignore": [
+    "**/__tests__/**",
+    "*.test.js",
+    "*.spec.js"
+  ]
+}
