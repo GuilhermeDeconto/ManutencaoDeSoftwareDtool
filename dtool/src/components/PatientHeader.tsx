@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, StyleSheet, View } from "react-native";
+import components from "src/constants/components";
 import colors from "../utils/colors";
 import sizes from "../utils/sizes";
 
@@ -23,10 +24,10 @@ const PatientHeader: React.FC<Props> = ({
       </View>
       <View style={styles.headerVertical}>
         <Text style={styles.text}>
-          {patientID || "Prontuário não informado"}
+          {patientID || components.PatientHeader.patientIdText}
         </Text>
         <Text style={styles.textSecondary}>
-          {patientSex || "Sexo não informado"}
+          {patientSex || components.PatientHeader.patientSexText}
         </Text>
       </View>
     </View>

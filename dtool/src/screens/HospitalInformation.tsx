@@ -16,6 +16,7 @@ import colors from "../utils/colors";
 import { WarningBox } from "../containers";
 import { ButtonPrimary, ButtonSecundary } from "../components";
 import { downloadReport, syncExecutions } from "../services/appService";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -110,8 +111,8 @@ const HospitalInformation: React.FC<ScreenProps> = ({ navigation }) => {
         await downloadReport();
       } catch (error) {
         Alert.alert(
-          "Falha ao baixar relatório",
-          "Tente novamente mais tarde.",
+          screens.HospitalInformation.falhaAoBaixarRelatorioText,
+          screens.HospitalInformation.tenteNovamenteMaisTardeText,
           [{ text: "OK", style: "default" }]
         );
       }
@@ -140,7 +141,7 @@ const HospitalInformation: React.FC<ScreenProps> = ({ navigation }) => {
           </View>
           <Text style={styles.textHospital}>{hospitalName}</Text>
           <Text style={styles.text}>
-            Coleta de tempo de atividades hospitalares
+            {screens.HospitalInformation.coletaText}
           </Text>
           <View style={styles.iniciateButton}>
             <ButtonPrimary

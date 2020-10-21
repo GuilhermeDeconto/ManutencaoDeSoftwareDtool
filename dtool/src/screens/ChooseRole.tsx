@@ -12,6 +12,7 @@ import * as localStorage from "../services/localStorage";
 import colors from "../utils/colors";
 import { BasicList } from "../components";
 import { RememberOption } from "../containers";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -59,7 +60,7 @@ const ChooseRole: React.FC<ScreenProps> = ({ navigation, route }) => {
             <RememberOption
               onValueChange={handleToggleChange}
               title="Lembrar função"
-              tooltipText="Marque se este for o seu dispositivo pessoal."
+              tooltipText={screens.ChooseRole.toolTipText}
             />
             <BasicList
               data={roles.map((role) => role.name)}

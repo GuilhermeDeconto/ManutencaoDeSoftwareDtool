@@ -3,6 +3,7 @@ import { RNCamera } from "react-native-camera";
 import { Dimensions, View, Text, StyleSheet } from "react-native";
 import colors from "../utils/colors";
 import sizes from "../utils/sizes";
+import containers from "src/constants/containers";
 
 export interface ContainerProps {
   children?: ReactElement[];
@@ -24,8 +25,8 @@ const BarcodeCamera: React.FC<ContainerProps> = ({ children, onChange }) => {
       <RNCamera
         ref={refCamera}
         androidCameraPermissionOptions={{
-          title: "Permissão para usar a câmera",
-          message: "Precisamos de permissão para escanear os códigos",
+          title: containers.BarcodeCamera.tituloAndroidText,
+          message: containers.BarcodeCamera.mensagemAndroidText,
           buttonPositive: "OK",
           buttonNegative: "CANCELAR",
         }}
@@ -45,7 +46,7 @@ const BarcodeCamera: React.FC<ContainerProps> = ({ children, onChange }) => {
         <>
           <View style={styles.scanMessageView}>
             <Text style={styles.scanMessage}>
-              Aponte a câmera para o código de barras do prontuário
+              {containers.BarcodeCamera.mensagemAponteCameraText}
             </Text>
           </View>
           <View style={styles.scanBoxContainer}>

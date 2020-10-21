@@ -15,6 +15,7 @@ import {
   InputText,
   ButtonPrimary,
 } from "../components";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -54,13 +55,13 @@ const PatientScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
             <View style={styles.inputContainer}>
               <InputText
                 autoFocus
-                title="Prontuário"
+                title={screens.AddPatient.inputProntuarioText}
                 onChangeText={(key) => setId(key)}
                 style={styles.input}
                 value={id}
               />
               <InputText
-                title="Iniciais"
+                title={screens.AddPatient.inputIniciaisText}
                 placeholder="ABC"
                 onChangeText={(key) => setName(key)}
                 style={styles.input}
@@ -70,7 +71,7 @@ const PatientScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
           </View>
           <View style={styles.buttonContainer}>
             <ButtonPrimary
-              title="Salvar e continuar"
+              title={screens.AddPatient.buttonSalvarEContinuarText}
               disabled={disabled}
               onPress={savePatientInfos}
             />

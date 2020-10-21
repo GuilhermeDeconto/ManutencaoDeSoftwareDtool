@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, StyleSheet, View, TouchableOpacity } from "react-native";
+import containers from "src/constants/containers";
 import colors from "../utils/colors";
 import sizes from "../utils/sizes";
 
@@ -10,10 +11,7 @@ export interface Props {
 const WarningBox: React.FC<Props> = ({ handleBack }) => {
   return (
     <View style={styles.warning}>
-      <Text style={styles.text}>
-        Você possui registros de execução não salvos que serão enviados no fim
-        da próxima execução.
-      </Text>
+      <Text style={styles.text}>{containers.WarningBox.principalText}</Text>
       <TouchableOpacity onPress={handleBack}>
         <Text style={styles.warningButton}>Tentar enviar agora</Text>
       </TouchableOpacity>

@@ -5,6 +5,7 @@
 Siga o [tutorial oficial](https://reactnative.dev/docs/environment-setup) na aba `React Native CLI Quickstart`.
 Não é necessário criar uma nova aplicação, vamos utilizar a nossa para testar seu ambiente, só configure o ambiente por enquanto:
 Siga atentamente o tutorial oficial, principalmente os passos:
+
 1. Install Android Studio
 2. Install the Android SDK
 3. Configure the ANDROID_HOME environment variable

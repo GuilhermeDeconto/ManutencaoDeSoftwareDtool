@@ -11,6 +11,8 @@ import sizes from "../utils/sizes";
 import colors from "../utils/colors";
 import ErrorText from "./ErrorText";
 
+import components from "src/constants/components";
+
 export interface Props {
   data?: Array<any>;
   docList?: Doc[];
@@ -90,7 +92,7 @@ const BasicList: React.FC<Props> = ({
           keyExtractor={(item, index) => index.toString()}
         />
       ) : (
-        <ErrorText text="Não há itens salvos." />
+        <ErrorText text={components.BasicList.errorText} />
       )}
     </View>
   );
