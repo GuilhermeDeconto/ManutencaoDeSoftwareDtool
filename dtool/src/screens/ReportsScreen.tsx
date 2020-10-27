@@ -34,7 +34,7 @@ const ReportsScreen: React.FC<ScreenProps> = ({ navigation }) => {
         return;
       }
 
-      const reports = await getReports(technology as number, role as number);
+      const reports = await getReports(technology as number, role);
       const metrics = reports
         .filter((metric) => {
           return (
