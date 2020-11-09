@@ -40,7 +40,9 @@
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
     "rn-fetch-blob": "^0.12.0",
-    "rne-modal-tooltip": "gist:b28c003d87c619674def0878473338a0"
+    "rne-modal-tooltip": "gist:b28c003d87c619674def0878473338a0",
+    "@types/styled-components": "^5.1.2",
+    "styled-components": "^5.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.6.2",
