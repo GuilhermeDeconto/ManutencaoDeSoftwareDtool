@@ -17,7 +17,7 @@ import colors from "../utils/colors";
 import sizes from "../utils/sizes";
 
 export interface ScreenProps {
-  data?: CardType[] | undefined;
+  data?: CardType[];
   selectedCardIndex: number;
   toggleCard: (card: CardType, index: number) => void;
 }

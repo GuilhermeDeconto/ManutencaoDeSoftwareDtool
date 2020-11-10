@@ -8,15 +8,15 @@ import jobsLoader from "./jobs"
 
 export default async app => {
   // environment
-  await configLoader()
+  configLoader()
   console.info("✅ Environment variables loaded")
 
   // logging
-  await loggerLoader(app)
+  loggerLoader(app)
   console.info("✅ Logger loaded")
 
   // express (routes)
-  await expressLoader(app)
+  expressLoader(app)
   console.info("✅ Express loaded")
 
   // database
@@ -24,6 +24,6 @@ export default async app => {
   console.info("✅ Sequelize loaded")
 
   // jobs
-  await jobsLoader()
+  jobsLoader()
   console.info("✅ Jobs loaded and started")
 }
