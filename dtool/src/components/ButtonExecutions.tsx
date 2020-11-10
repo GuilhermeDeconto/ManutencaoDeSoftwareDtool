@@ -8,6 +8,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import colors from "../utils/colors";
 import sizes from "../utils/sizes";
+import { Button } from "./ButtonExecutionsStyle"
 
 export interface Props extends TouchableOpacityProps {
   disabled?: boolean;
@@ -57,11 +58,11 @@ const ButtonExecutions: React.FC<Props> = ({
   ];
 
   return (
-    <TouchableOpacity
+    <Button
       {...props}
       activeOpacity={0.8}
       disabled={disabled}
-      style={[styles.base, buttonStyle]}
+      style={[buttonStyle]}
     >
       <Text style={styles.text}>{text}</Text>
       <Icon
@@ -70,7 +71,7 @@ const ButtonExecutions: React.FC<Props> = ({
         color={colors.basic.white}
         style={styles.icon}
       />
-    </TouchableOpacity>
+    </Button>
   );
 };
 
