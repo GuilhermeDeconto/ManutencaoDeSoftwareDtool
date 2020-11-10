@@ -207,7 +207,7 @@ export default class TechnologyService {
       let [name, shortName] = csvName.split("[")
 
       if (shortName) {
-        ;[shortName] = shortName.split("]")
+        [shortName] = shortName.split("]")
       }
 
       return {
