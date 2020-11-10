@@ -47,7 +47,7 @@ const BasicList: React.FC<Props> = ({
               <View style={styles.itemContainer}>
                 <TouchableOpacity
                   style={styles.itemContainer}
-                  onPress={() => onPress!(index)}
+                  onPress={() => (index)}
                 >
                   <Text style={[styles.item, styles.patientName]}>
                     {item?.name || item}
@@ -60,7 +60,7 @@ const BasicList: React.FC<Props> = ({
                 {icon && (
                   <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => onPressTrashIcon!(index)}
+                    onPress={() => (index)}
                     style={styles.iconButton}
                   >
                     {icon}
@@ -69,7 +69,7 @@ const BasicList: React.FC<Props> = ({
                 {iconDownload && (
                   <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => onPressIconDownload!(index)}
+                    onPress={() => (index)}
                     style={styles.iconButton}
                   >
                     {iconDownload}
@@ -80,7 +80,7 @@ const BasicList: React.FC<Props> = ({
               <View>
                 <TouchableOpacity
                   style={styles.itemContainer}
-                  onPress={() => onPress!(index)}
+                  onPress={() => (index)}
                 >
                   <Text style={styles.item}>{item}</Text>
                 </TouchableOpacity>

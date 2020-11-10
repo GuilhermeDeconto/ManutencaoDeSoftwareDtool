@@ -86,11 +86,11 @@ export const saveData = async (remoteData: any) => {
       a.name.toUpperCase().localeCompare(b.name.toUpperCase())
     );
     for (let i = 0; i < orderedRoles.length; i++) {
-      orderedRoles[i].activities = orderedRoles[i].activities.sort((a, b) =>
+      orderedRoles[i].activities.sort((a, b) =>
         a.name.toUpperCase().localeCompare(b.name.toUpperCase())
       );
     }
-    orderedTechnologies = orderedTechnologies.sort((a, b) =>
+    orderedTechnologies.sort((a, b) =>
       a.name.toUpperCase().localeCompare(b.name.toUpperCase())
     );
     const obj = {
@@ -200,7 +200,7 @@ export const removeOngoingExecution = (index: number) =>
 export const removeTechnology = (index: number) =>
   removeObjectItem("@technology", index);
 
-export const setPauseTimestampAppState = (timestamp: string | null) =>
+export const setPauseTimestampAppState = (timestamp: string) =>
   setItem("@pauseTimestampAppState", timestamp);
 
 export const getPauseTimestampAppState = () =>

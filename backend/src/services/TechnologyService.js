@@ -66,7 +66,7 @@ export default class TechnologyService {
     )
 
     const grid = new Array(maxIDActivity)
-    for (let i = 0; i < grid.length; i += 1) {
+    for (let a = 0; a < grid.length; a += 1) {
       grid[i] = new Array(maxIDRole).fill(null)
     }
 

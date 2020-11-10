@@ -13,7 +13,7 @@ const initialState: CarouselType = {
   data: [],
 };
 
-export default function execution(prevState = initialState, action: any) {
+export default function execution(action: any, prevState = initialState) {
   switch (action.type) {
     case "ADD_CARD":
       const cards = prevState.data;
