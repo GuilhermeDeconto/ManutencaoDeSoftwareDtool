@@ -251,7 +251,7 @@ export default class TechnologyService {
       }
     }
 
-    if (result.activities.length === 0 || !result.roles.length === 0) {
+    if (result.activities.length == 0 || !result.roles.length == 0) {
       throw new Error("invalid_csv")
     }
 
