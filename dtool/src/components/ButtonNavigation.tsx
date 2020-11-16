@@ -4,8 +4,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import colors from "../utils/colors";
-import { Container, CustomTextDisabled, CustomItem } from "./ButtonNavigationStyle"
+import { Container, CustomTextDisabled, CustomItem, CustomTextNormal, CustomItemDisabled, ChildContainer } from "./ButtonNavigationStyle"
 
 export interface Props extends TouchableOpacityProps {
   type: "forward" | "back";
@@ -15,45 +14,63 @@ export interface Props extends TouchableOpacityProps {
 const ButtonNavigation: React.FC<Props> = ({ type, disabled, ...props }) => {
   return (
     <Container disabled={disabled} {...props}>
-      <View style={styles.content}>
+      <ChildContainer >
         {type === "forward" && (
           <>
-            <CustomTextDisabled style={disabled && styles.textDisabled}>
-              Próximo
-            </CustomTextDisabled>
-            <CustomItem
-              style={disabled && styles.iconDisabled}
-              name="ios-arrow-forward"
-            />
+            {!disabled &&
+              <View>
+                <CustomTextNormal>
+                  Próximo
+              </CustomTextNormal>
+                <CustomItem
+                  name="ios-arrow-forward"
+                />
+              </View>
+
+            }
+            {disabled &&
+              <View>
+                <CustomTextDisabled>
+                  Próximo
+              </CustomTextDisabled>
+                <CustomItemDisabled
+                  name="ios-arrow-forward"
+                />
+              </View>
+
+            }
           </>
         )}
 
         {type === "back" && (
           <>
-            <CustomItem
-              style={disabled && styles.iconDisabled}
-              name="ios-arrow-back"
-            />
-            <CustomTextDisabled style={disabled && styles.textDisabled}>
-              Anterior
-            </CustomTextDisabled>
+            {!disabled &&
+              <View>
+                <CustomTextNormal>
+                  Anterior
+              </CustomTextNormal>
+                <CustomItem
+                  name="ios-arrow-back"
+                />
+              </View>
+
+            }
+            {disabled &&
+              <View>
+                <CustomTextDisabled>
+                  Anterior
+              </CustomTextDisabled>
+                <CustomItemDisabled
+                  name="ios-arrow-back"
+                />
+              </View>
+
+            }
           </>
         )}
-      </View>
+      </ChildContainer>
     </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  content: {
-    flexDirection: "row",
-  },
-  iconDisabled: {
-    color: colors.text.tertiary,
-  },
-  textDisabled: {
-    color: colors.text.tertiary,
-  },
-});
 
 export default ButtonNavigation;
