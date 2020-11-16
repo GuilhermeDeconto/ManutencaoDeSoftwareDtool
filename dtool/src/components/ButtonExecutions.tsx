@@ -8,7 +8,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import colors from "../utils/colors";
 import sizes from "../utils/sizes";
-import { Button } from "./ButtonExecutionsStyle"
+import { Button, CustomText } from "./ButtonExecutionsStyle"
 
 export interface Props extends TouchableOpacityProps {
   disabled?: boolean;
@@ -64,7 +64,7 @@ const ButtonExecutions: React.FC<Props> = ({
       disabled={disabled}
       style={[buttonStyle]}
     >
-      <Text style={styles.text}>{text}</Text>
+      <CustomText>{text}</CustomText>
       <Icon
         name={iconName}
         size={32}
@@ -103,13 +103,6 @@ const styles = StyleSheet.create({
   },
   stop: {
     backgroundColor: colors.theme.accent,
-  },
-  text: {
-    color: colors.basic.white,
-    fontSize: sizes.buttonText.main,
-    fontWeight: "600",
-    left: 16,
-    position: "absolute",
   },
   upload: {
     backgroundColor: colors.theme.primary,
