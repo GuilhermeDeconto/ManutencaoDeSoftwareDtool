@@ -66,7 +66,7 @@ export default class TechnologyService {
     )
 
     const grid = new Array(maxIDActivity)
-    for (let i = 0; i < grid.length; i += 1) {
+    for (let a = 0; a < grid.length; a += 1) {
       grid[i] = new Array(maxIDRole).fill(null)
     }
 
@@ -207,7 +207,7 @@ export default class TechnologyService {
       let [name, shortName] = csvName.split("[")
 
       if (shortName) {
-        ;[shortName] = shortName.split("]")
+        [shortName] = shortName.split("]")
       }
 
       return {
@@ -251,7 +251,7 @@ export default class TechnologyService {
       }
     }
 
-    if (result.activities.length === 0 || !result.roles.length === 0) {
+    if (result.activities.length == 0 || !result.roles.length == 0) {
       throw new Error("invalid_csv")
     }
 

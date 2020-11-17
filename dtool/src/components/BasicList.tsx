@@ -1,15 +1,11 @@
 import React, { ReactElement } from "react";
 import {
-  StyleSheet,
   FlatList,
-  View,
-  TouchableOpacity,
-  Text,
+  View
 } from "react-native";
 import { Doc, Patient } from "../services/types";
-import sizes from "../utils/sizes";
-import colors from "../utils/colors";
 import ErrorText from "./ErrorText";
+import { Container, IconButton,  TextItem,  TextPatient, TextPatientSubtitle } from "./BasicListStyle";
 
 import components from "src/constants/components";
 
@@ -37,7 +33,7 @@ const BasicList: React.FC<Props> = ({
   technologyList,
 }) => {
   return (
-    <View style={styles.contanier}>
+    <Container>
       {data?.length ||
       patientList?.length ||
       technologyList?.length ||
@@ -46,46 +42,42 @@ const BasicList: React.FC<Props> = ({
           data={data || patientList || technologyList || docList}
           renderItem={({ item, index }) =>
             patientList || technologyList || docList ? (
-              <View style={styles.itemContainer}>
-                <TouchableOpacity
-                  style={styles.itemContainer}
-                  onPress={() => onPress!(index)}
+              <Container>
+                <IconButton
+                  onPress={() => {onPress && onPress(index)}}
                 >
-                  <Text style={[styles.item, styles.patientName]}>
+                  <TextPatient>
                     {item?.name || item}
-                  </Text>
-                  <Text style={[styles.item, styles.patientSubtitle]}>
+                  </TextPatient>
+                  <TextPatientSubtitle>
                     {!technologyList && (item?.type || `${item?.id} |`)}{" "}
                     {item?.sex}
-                  </Text>
-                </TouchableOpacity>
+                  </TextPatientSubtitle>
+                </IconButton>
                 {icon && (
-                  <TouchableOpacity
+                  <IconButton
                     activeOpacity={0.9}
-                    onPress={() => onPressTrashIcon!(index)}
-                    style={styles.iconButton}
+                    onPress={() => {onPressTrashIcon && onPressTrashIcon(index)}}
                   >
                     {icon}
-                  </TouchableOpacity>
+                  </IconButton>
                 )}
                 {iconDownload && (
-                  <TouchableOpacity
+                  <IconButton
                     activeOpacity={0.9}
-                    onPress={() => onPressIconDownload!(index)}
-                    style={styles.iconButton}
+                    onPress={() => {onPressIconDownload && onPressIconDownload(index)}}
                   >
                     {iconDownload}
-                  </TouchableOpacity>
+                  </IconButton>
                 )}
-              </View>
+              </Container>
             ) : (
               <View>
-                <TouchableOpacity
-                  style={styles.itemContainer}
-                  onPress={() => onPress!(index)}
+                <IconButton
+                  onPress={() => {onPress && onPress(index)}}
                 >
-                  <Text style={styles.item}>{item}</Text>
-                </TouchableOpacity>
+                  <TextItem >{item}</TextItem>
+                </IconButton>
               </View>
             )
           }
@@ -94,43 +86,8 @@ const BasicList: React.FC<Props> = ({
       ) : (
         <ErrorText text={components.BasicList.errorText} />
       )}
-    </View>
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  contanier: {
-    alignItems: "center",
-    flexDirection: "row",
-    paddingBottom: 200,
-    width: "100%",
-  },
-  iconButton: {
-    position: "absolute",
-    right: 10,
-  },
-  item: {
-    color: colors.text.primary,
-    flexDirection: "row",
-    fontSize: sizes.buttonText.main,
-    fontStyle: "normal",
-    fontWeight: "normal",
-    padding: 16,
-  },
-  itemContainer: {
-    alignItems: "center",
-    borderBottomColor: colors.basic.separator,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    width: "100%",
-  },
-  patientName: {
-    fontWeight: "bold",
-  },
-  patientSubtitle: {
-    color: colors.text.tertiary,
-    fontSize: sizes.buttonText.label,
-  },
-});
 
 export default BasicList;

@@ -195,7 +195,7 @@ export const updateAllTimers = async () => {
     return hasOngoingExecution;
   }
 
-  executions.map((exec, i) => {
+  executions.forEach((exec, i) => {
     if (exec.currentState === ExecutionStatus.Initialized) {
       hasOngoingExecution = true;
 
