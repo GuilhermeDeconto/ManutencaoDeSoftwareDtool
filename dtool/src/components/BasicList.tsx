@@ -42,7 +42,7 @@ const BasicList: React.FC<Props> = ({
             patientList || technologyList || docList ? (
               <Container>
                 <IconButton
-                  onPress={() => onPress!(index)}
+                  onPress={() => {onPress && onPress(index)}}
                 >
                   <TextPatient>
                     {item?.name || item}
@@ -55,7 +55,7 @@ const BasicList: React.FC<Props> = ({
                 {icon && (
                   <IconButton
                     activeOpacity={0.9}
-                    onPress={() => onPressTrashIcon!(index)}
+                    onPress={() => {onPressTrashIcon && onPressTrashIcon(index)}}
                   >
                     {icon}
                   </IconButton>
@@ -63,7 +63,7 @@ const BasicList: React.FC<Props> = ({
                 {iconDownload && (
                   <IconButton
                     activeOpacity={0.9}
-                    onPress={() => onPressIconDownload!(index)}
+                    onPress={() => {onPressIconDownload && onPressIconDownload(index)}}
                   >
                     {iconDownload}
                   </IconButton>
@@ -72,7 +72,7 @@ const BasicList: React.FC<Props> = ({
             ) : (
               <View>
                 <IconButton
-                  onPress={() => onPress!(index)}
+                  onPress={() => {onPress && onPress(index)}}
                 >
                   <TextItem >{item}</TextItem>
                 </IconButton>

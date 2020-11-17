@@ -1,7 +1,6 @@
 import React from "react";
 import {
   TouchableOpacityProps,
-  StyleSheet,
   View,
 } from "react-native";
 import { Container, CustomTextDisabled, CustomItem, CustomTextNormal, CustomItemDisabled, ChildContainer } from "./ButtonNavigationStyle"
