@@ -1,14 +1,9 @@
 import React, { ReactElement } from "react";
 import {
-  StyleSheet,
   FlatList,
-  View,
-  TouchableOpacity,
-  Text,
+  View
 } from "react-native";
 import { Doc, Patient } from "../services/types";
-import sizes from "../utils/sizes";
-import colors from "../utils/colors";
 import ErrorText from "./ErrorText";
 import { Container, IconButton,  TextItem,  TextPatient, TextPatientSubtitle } from "./BasicListStyle";
 
