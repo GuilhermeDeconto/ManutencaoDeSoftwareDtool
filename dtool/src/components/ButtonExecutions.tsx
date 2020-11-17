@@ -1,13 +1,10 @@
 import React from "react";
 import {
-  Text,
-  TouchableOpacity,
   TouchableOpacityProps,
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import colors from "../utils/colors";
-import sizes from "../utils/sizes";
 import { Button, CustomText } from "./ButtonExecutionsStyle"
 
 export interface Props extends TouchableOpacityProps {
