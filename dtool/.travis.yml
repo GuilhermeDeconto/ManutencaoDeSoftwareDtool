@@ -1,4 +1,3 @@
-
 language: node_js
 node_js:
   - node
@@ -9,10 +8,8 @@ cache:
     - .jest
 before_script:
   - npm install -g npm@latest
-  - npm install
-  - npm install jest-expo
-  - npm install -g expo-cli
 script:
+  - cd dtool
   - npm ci
   - npx jest --ci
 jobs:
@@ -20,6 +17,7 @@ jobs:
     - stage: deploy
       node_js: lts/*
       script:
+        - cd dtool
         - npm ci
         - npx expo login -u $EXPO_USERNAME -p $EXPO_PASSWORD
         - npx expo publish --non-interactive
