@@ -7,6 +7,8 @@ import { Doc, Patient } from "../services/types";
 import ErrorText from "./ErrorText";
 import { Container, IconButton,  TextItem,  TextPatient, TextPatientSubtitle } from "./BasicListStyle";
 
+import components from "src/constants/components";
+
 export interface Props {
   data?: Array<any>;
   docList?: Doc[];
@@ -82,7 +84,7 @@ const BasicList: React.FC<Props> = ({
           keyExtractor={(item, index) => index.toString()}
         />
       ) : (
-        <ErrorText text="Não há itens salvos." />
+        <ErrorText text={components.BasicList.errorText} />
       )}
     </Container>
   );

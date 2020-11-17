@@ -11,6 +11,7 @@ import {
 import { StackNavigationProp } from "@react-navigation/stack";
 import sizes from "../utils/sizes";
 import colors from "../utils/colors";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -22,12 +23,7 @@ const AboutScreen: React.FC<ScreenProps> = () => {
       <SafeAreaView>
         <View style={styles.body}>
           <View style={styles.mainView}>
-            <Text style={styles.text}>
-              Projeto desenvolvido por alunos da Agência Experimental de
-              Engenharia de Software (AGES), da PUCRS, em parceria com os
-              idealizadores Ana Paula e Ricardo do Instituto de Avaliação de
-              Tecnologia em Saúde (IATS).
-            </Text>
+            <Text style={styles.text}>{screens.AboutScreen.agesText}</Text>
           </View>
           <View style={styles.mainView}>
             <Text style={styles.textTopic}>Alunos:</Text>

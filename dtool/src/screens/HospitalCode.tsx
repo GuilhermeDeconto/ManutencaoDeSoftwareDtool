@@ -17,6 +17,7 @@ import sizes from "../utils/sizes";
 
 import { ButtonPrimary, ErrorText } from "../components";
 import { CodeEntry } from "../containers";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -37,9 +38,9 @@ const HospitalCode: React.FC<ScreenProps> = ({ navigation }) => {
       }
     } catch (error) {
       if (error.message === "not-found") {
-        setCodeError("Código de hospital inválido");
+        setCodeError(screens.HospitalCode.codigoInvalidoText);
       } else if (error.message === "network") {
-        setCodeError("Problema de conexão");
+        setCodeError(screens.HospitalCode.problemaDeConexaoText);
       } else {
         setCodeError("Tente novamente");
       }
@@ -57,7 +58,9 @@ const HospitalCode: React.FC<ScreenProps> = ({ navigation }) => {
         <View style={styles.body}>
           <View style={styles.main}>
             <Icon name="business" size={64} color={colors.text.primary} />
-            <Text style={styles.description}>Informe o código de acesso:</Text>
+            <Text style={styles.description}>
+              {screens.HospitalCode.informeCodigoText}
+            </Text>
             <CodeEntry
               onComplete={(value) => setCode(value)}
               onChange={clearError}

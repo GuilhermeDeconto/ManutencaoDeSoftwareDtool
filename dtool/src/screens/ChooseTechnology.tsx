@@ -12,6 +12,7 @@ import * as localStorage from "../services/localStorage";
 import colors from "../utils/colors";
 import { BasicList } from "../components";
 import { RememberOption } from "../containers";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -57,7 +58,7 @@ const ChooseTechnology: React.FC<ScreenProps> = ({ route, navigation }) => {
             <RememberOption
               onValueChange={handleToggleChange}
               title="Lembrar tecnologia"
-              tooltipText="Marque se este for o seu dispositivo pessoal."
+              tooltipText={screens.ChooseTechnology.toolTipText}
             />
             <BasicList
               data={technologies.map((tech: Technology) => tech.name)}

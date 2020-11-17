@@ -12,6 +12,7 @@ import { getSession, getPreferences } from "../services/localStorage";
 import { ButtonNavigation, Report } from "../components";
 import { getReports } from "../services/appService";
 import colors from "../utils/colors";
+import screens from "src/constants/screens";
 
 export interface ScreenProps {
   navigation: StackNavigationProp<any, any>;
@@ -83,17 +84,18 @@ const ReportsScreen: React.FC<ScreenProps> = ({ navigation }) => {
       {!loading && (data || []).length === 0 && (
         <View style={styles.emptyStateContainer}>
           <Text style={styles.emptyStateText}>
-            Não há execuções de atividades para serem exibidas.
+            {screens.ReportsScreen.semExecucoesText}
           </Text>
         </View>
       )}
       {!loading && (data || []).length > 0 && (
         <>
           <Text style={styles.textSummary}>
-            Abaixo, é possível verificar algumas das métricas que já estão sendo
-            calculadas a partir das cronometragens efetuadas até o momento.
+            {screens.ReportsScreen.sumarioText}
           </Text>
-          <Text style={styles.textTitle}>Métricas de Tempo por Atividade:</Text>
+          <Text style={styles.textTitle}>
+            {screens.ReportsScreen.metricasText}
+          </Text>
           <View style={styles.graph}>
             <Report
               title={data ? data[index].activity : ""}
